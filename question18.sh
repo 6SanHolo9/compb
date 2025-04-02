@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Fetch the latest branches from the remote
+git fetch --all
+
 # Identify all branches
 git branch -r
 
@@ -15,8 +18,15 @@ for branch in $(git branch -r | grep 'ready' | sed 's/origin\///'); do
   git push origin --delete $branch
 done
 
+# Ensure main branch is up to date
+git checkout main
+git pull origin main
+
 # Update all branches starting with 'update' with latest changes from main
 for branch in $(git branch -r | grep 'update' | sed 's/origin\///'); do
-  git checkout $branch
-  git merge main -m "Updating $branch with latest changes from main"
+  local_branch=${branch/origin\//}
+  git checkout -b $local_branch --track $branch
+  git merge main -m "Updating $local_branch with latest changes from main"
+  git push origin $local_branch
+  git checkout main
 done
